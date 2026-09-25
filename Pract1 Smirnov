@@ -1,6 +1,7 @@
-Задача 1
-Вывести отсортированный в алфавитном порядке список имен пользователей в файле passwd (вам понадобится grep).
-labex:project/ $ grep -v '^#' /etc/passwd | cut -d: -f1 | sort
+Задача 1. Вывести отсортированный по алфавиту список пользователей из /etc/passwd
+
+grep -v '^#' /etc/passwd | cut -d: -f1 | sort
+
 _apt
 backup
 bin
@@ -25,62 +26,229 @@ systemd-timesync
 uucp
 www-data
 
-Задача 2
-Вывести данные /etc/protocols в отформатированном и отсортированном порядке для 5 наибольших портов
-labex:project/ $ awk '$2 ~ /^[0-9]+$/ {print $2, $1}' /etc/protocols | sort -k1,1nr | head -n 5
+--------------------------------------------------------------------------------
+
+Задача 2. 5 наибольших портов/протоколов из /etc/protocols
+
+awk '$2 ~ /^[0-9]+$/ {print $2, $1}' /etc/protocols | sort -k1,1nr | head -n 5
+
 142 rohc
 141 wesp
 140 shim6
 139 hip
 138 manet
 
-Задача 3
-Написать программу banner средствами bash для вывода текстов (размер баннера должен меняться!)
-labex:project/ $ ./banner "Hello from RTU MIREA!"
+--------------------------------------------------------------------------------
+
+Задача 3. Программа banner (с динамической шириной)
+
+banner:
+#!/usr/bin/env bash
+set -euo pipefail
+
+text="${1:-}"
+len=${#text}
+total_inner=$((len + 2))
+dashes=$(printf '%*s' "$total_inner" '' | tr ' ' '-')
+
+printf '+%s+\n' "$dashes"
+printf '| %s |\n' "$text"
+printf '+%s+\n' "$dashes"
+
+./banner "Hello from RTU MIREA!"
+./banner "Short"
+
 +-----------------------+
 | Hello from RTU MIREA! |
 +-----------------------+
++-------+
+| Short |
++-------+
 
-Задача 4
-Написать программу для вывода всех идентификаторов (по правилам C/C++ или Java) в файле (без повторений).
-labex:project/ $ ./get_identifiers.sh hello.c
+--------------------------------------------------------------------------------
+
+Задача 4. Вывод всех идентификаторов C/C++/Java без повторений
+
+hello.c:
+#include <stdio.h>
+
+int main(void) {
+    int n = 42;
+    printf("hello, world %d\n", n);
+    return 0;
+}
+
+get_identifiers.sh:
+#!/usr/bin/env bash
+file="${1:?Usage: $0 <file>}"
+grep -oE '\b[a-zA-Z_][a-zA-Z0-9_]*\b' "$file" | sort -u | paste -s -d ' ' -
+
+./get_identifiers.sh hello.c
+
 d hello include int main n printf return stdio void world
 
-Задача 5
-Написать программу для регистрации пользовательской команды (правильные права доступа и копирование в /usr/local/bin).
-labex:project/ $ ./reg banner
-banner
+--------------------------------------------------------------------------------
 
-Задача 6
-Написать программу для проверки наличия комментария в первой строке файлов с расширением c, js и py.
-labex:project/ $ ./check_comment.sh .
-[OK]  ./test_ok.c
-[NO]  ./test_bad.js
-[OK]  ./test_ok.py
+Задача 5. Регистрация пользовательской команды в /usr/local/bin (скрипт reg)
 
-Задача 7
-Написать программу для нахождения файлов-дубликатов (имеющих 1 или более копий содержимого) по заданному пути (и подкаталогам).
-labex:project/ $ ./find_duplicates.sh .
-Хеш: 58a980757d90e9bd1114cd3b749ad57618ea4d55038fae6396e95d1223e75a6c
-  ./test_dup/file_a.txt
-  ./test_dup/sub/file_b.txt
+reg:
+#!/usr/bin/env bash
+set -euo pipefail
 
-Задача 8
-Написать программу, которая находит все файлы в данном каталоге с расширением, указанным в качестве аргумента и архивирует все эти файлы в архив tar.
-labex:project/ $ ./archive_by_ext.sh . log
-./log1.log
-./log2.log
+target="${1:?Использование: $0 <файл_скрипта>}"
+
+if [ ! -f "$target" ]; then
+    echo "Ошибка: файл $target не найден" >&2
+    exit 1
+fi
+
+chmod +x "$target"
+if [ "$(id -u)" -eq 0 ]; then
+    cp "$target" /usr/local/bin/
+else
+    sudo cp "$target" /usr/local/bin/
+fi
+echo "Команда $target успешно установлена в /usr/local/bin"
+
+./reg banner
+which banner
+banner "Global command works!"
+
+Команда banner успешно установлена в /usr/local/bin
+/usr/local/bin/banner
++-----------------------+
+| Global command works! |
++-----------------------+
+
+--------------------------------------------------------------------------------
+
+Задача 6. Проверка наличия комментария в первой строке (*.c, *.js, *.py)
+
+check_comment.sh:
+#!/usr/bin/env bash
+dir="${1:-.}"
+
+find "$dir" -type f \( -name "*.c" -o -name "*.js" -o -name "*.py" \) | while read -r f; do
+    first_line=$(head -n 1 "$f" 2>/dev/null || true)
+    case "$f" in
+        *.c|*.js)
+            if [[ "$first_line" =~ ^[[:space:]]*(\/\/|\/\*) ]]; then
+                echo "[OK]  $f"
+            else
+                echo "[NO]  $f"
+            fi
+            ;;
+        *.py)
+            if [[ "$first_line" =~ ^[[:space:]]*# ]]; then
+                echo "[OK]  $f"
+            else
+                echo "[NO]  $f"
+            fi
+            ;;
+    esac
+done
+
+./check_comment.sh .
+
+[OK]  ./test_with_comm.c
+[NO]  ./test_no_comm.js
+[OK]  ./test_shebang.py
+
+--------------------------------------------------------------------------------
+
+Задача 7. Нахождение файлов-дубликатов по содержимому
+
+find_duplicates.sh:
+#!/usr/bin/env bash
+dir="${1:-.}"
+
+find "$dir" -type f -exec sha256sum {} + 2>/dev/null | \
+    sort | \
+    awk '{
+        hash = $1
+        $1 = ""
+        sub(/^[ \t]+/, "")
+        files[hash] = files[hash] ? files[hash] "\n  " $0 : $0
+        count[hash]++
+    }
+    END {
+        for (h in count) {
+            if (count[h] > 1) {
+                print "Hash: " h "\n  " files[h] "\n"
+            }
+        }
+    }'
+
+./find_duplicates.sh .
+
+Hash: 9b207559139e80ba583a652bf1c9c0f9948483b8b11116262fb08a38ec2d238b
+  ./orig.txt
+  ./sub/copy.txt
+
+--------------------------------------------------------------------------------
+
+Задача 8. Поиск файлов по расширению и архивация в tar
+
+archive_by_ext.sh:
+#!/usr/bin/env bash
+set -euo pipefail
+
+dir="${1:?Укажите каталог}"
+ext="${2:?Укажите расширение без точки}"
+archive_name="archive_${ext}.tar"
+
+find "$dir" -maxdepth 1 -type f -name "*.${ext}" -print0 | tar -cvf "$archive_name" --null -T -
+echo "Создан архив $archive_name"
+
+./archive_by_ext.sh . log
+tar -tf archive_log.tar
+
+./a.log
+./b.log
 Создан архив archive_log.tar
+./a.log
+./b.log
 
-Задача 9
-Написать программу, которая заменяет в файле последовательности из 4 пробелов на символ табуляции. Входной и выходной файлы задаются аргументами.
-labex:project/ $ ./spaces_to_tabs.sh code_spaces.py code_tabs.py && cat -A code_tabs.py
-def foo():$
-^Ix = 10$
+--------------------------------------------------------------------------------
+
+Задача 9. Замена 4 пробелов на символ табуляции (вход и выход аргументами)
+
+spaces_to_tabs.sh:
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [ "$#" -ne 2 ]; then
+    echo "Использование: $0 <входной_файл> <выходной_файл>" >&2
+    exit 1
+fi
+
+sed 's/    /\t/g' "$1" > "$2"
+
+./spaces_to_tabs.sh source_spaces.py converted_tabs.py
+cat -A converted_tabs.py
+
+def test():$
+^Ix = 1$
 ^I^Ireturn x$
 
-Задача 10
-Написать программу, которая выводит названия всех пустых текстовых файлов в указанной директории. Директория передается в программу параметром.
-labex:project/ $ ./empty_text_files.sh .
+--------------------------------------------------------------------------------
+
+Задача 10. Названия пустых текстовых файлов в указанной директории
+
+empty_text_files.sh:
+#!/usr/bin/env bash
+dir="${1:?Укажите директорию}"
+
+find "$dir" -maxdepth 1 -type f -empty -exec sh -c '
+    for f do
+        mime=$(file -b --mime-type "$f")
+        if [ "$mime" = "text/plain" ] || [ "$mime" = "inode/x-empty" ]; then
+            basename "$f"
+        fi
+    done
+' sh {} +
+
+./empty_text_files.sh .
+
 empty_notes.txt
-zero_len.txt
+blank_doc.txt
