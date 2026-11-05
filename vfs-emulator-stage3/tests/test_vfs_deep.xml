@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<vfs name="deep_vfs">
+    <dir name="level1">
+        <dir name="level2">
+            <dir name="level3">
+                <file name="deep_file.txt">Found me at level 3!</file>
+                <file name="binary.dat" encoding="base64">AQIDBAUGBwgJCg==</file>
+            </dir>
+            <file name="mid_file.txt">Level 2 info</file>
+        </dir>
+    </dir>
+</vfs>

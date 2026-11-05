@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<vfs name="files_vfs">
+    <file name="config.cfg">debug=true</file>
+    <file name="secret.bin" encoding="base64">U2VjcmV0Qnl0ZXNEYXRh</file>
+    <dir name="docs">
+        <file name="manual.txt">Read this manual</file>
+    </dir>
+</vfs>
