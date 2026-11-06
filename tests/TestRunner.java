@@ -12,6 +12,7 @@ import java.util.Set;
 public final class TestRunner {
     private static final String CYCLE_REPO =
             "A: B C\nB: D\nC: D E\nD:\nE: A\n";
+    private static final int EXPECTED_DEPTH = 2;
     private static boolean allPassed = true;
 
     private TestRunner() {
@@ -73,8 +74,8 @@ public final class TestRunner {
     private static void testParser(Path repo) throws AppException {
         String file = repo.toString();
         Config ok = ArgParser.parse(new String[] {"--package", "A", "--repo", file,
-            "--mode", "test", "--max-depth", "2", "--filter", "Z"});
-        check("параметры разобраны", "A".equals(ok.packageName()) && ok.maxDepth() == 2);
+            "--mode", "test", "--max-depth", String.valueOf(EXPECTED_DEPTH), "--filter", "Z"});
+        check("параметры разобраны", "A".equals(ok.packageName()) && ok.maxDepth() == EXPECTED_DEPTH);
         check("нет --package", rejects("--repo", file, "--mode", "test"));
         check("нет --repo", rejects("--package", "A", "--mode", "test"));
         check("неизвестная опция", rejects("--bogus"));
