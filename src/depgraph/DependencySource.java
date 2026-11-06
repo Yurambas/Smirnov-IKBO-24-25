@@ -14,5 +14,5 @@ public interface DependencySource {
      * @return список имён зависимостей
      * @throws AppException если пакет не найден или данные недоступны
      */
-    List<String> directDependencies(String name) throws AppException;
+    public List<String> directDependencies(String name) throws AppException;
 }
