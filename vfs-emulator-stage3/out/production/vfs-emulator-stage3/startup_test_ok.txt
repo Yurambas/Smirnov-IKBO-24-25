@@ -1,8 +1,0 @@
-# Тестовый сценарий: корректные команды
-ls
-ls -la /
-cd level1
-cd "folder with spaces"
-# Раскрытие переменных окружения
-ls $HOME
-ls $USER

@@ -1,4 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<vfs name="minimal_vfs">
-    <file name="readme.txt">Hello from minimal VFS root</file>
-</vfs>
