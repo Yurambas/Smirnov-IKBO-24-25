@@ -4,15 +4,10 @@ import java.util.List;
 
 /**
  * Источник сведений о прямых зависимостях пакетов.
+ * Метод {@code directDependencies(name)} принимает имя пакета и возвращает список имён
+ * его прямых зависимостей. Если пакет не найден или данные недоступны,
+ * выбрасывается {@link AppException}.
  */
 public interface DependencySource {
-
-    /**
-     * Возвращает прямые зависимости пакета.
-     *
-     * @param name имя пакета
-     * @return список имён зависимостей
-     * @throws AppException если пакет не найден или данные недоступны
-     */
-    public List<String> directDependencies(String name) throws AppException;
+    List<String> directDependencies(String name) throws AppException;
 }
